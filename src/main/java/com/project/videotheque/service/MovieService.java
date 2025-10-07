@@ -13,6 +13,5 @@ public interface MovieService {
     Movie create(Movie m);
     Movie update(Long id, Movie m);
     void delete(Long id);
-
     Page<Movie> search(String title, Integer year, Pageable pageable);
 }

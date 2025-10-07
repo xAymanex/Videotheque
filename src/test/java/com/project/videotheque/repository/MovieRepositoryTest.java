@@ -1,63 +1,36 @@
 package com.project.videotheque.repository;
 
-import com.project.videotheque.model.*;
-import org.junit.jupiter.api.BeforeEach;
+import com.project.videotheque.model.Movie;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.jdbc.Sql;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-
-import java.util.Set;
+import org.springframework.boot.test.autoconfigure.orm.jpa.AutoConfigureTestEntityManager;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
+@ActiveProfiles("test")
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE) // utilise TA base fichier
+@AutoConfigureTestEntityManager
+@Sql(scripts = "classpath:test-data/reset-and-seed.sql") // état connu avant chaque test
 class MovieRepositoryTest {
 
-    @Autowired DirectorRepository directors;
-    @Autowired ActorRepository actors;
-    @Autowired GenreRepository genres;
     @Autowired MovieRepository movies;
 
-    Long nolanId, leoId, scifiId;
-
-    @BeforeEach
-    void setup() {
-        Director nolan = directors.save(new Director("Christopher Nolan"));
-        nolanId = nolan.getId();
-        Actor leo = actors.save(new Actor("Leonardo DiCaprio"));
-        leoId = leo.getId();
-        Genre scifi = genres.save(new Genre("Sci-Fi"));
-        scifiId = scifi.getId();
-
-        Movie inception = new Movie();
-        inception.setTitle("Inception");
-        inception.setYear(2010);
-        inception.setDurationMinutes(148);
-        inception.setDirector(nolan);
-        inception.setActors(Set.of(leo));
-        inception.setGenres(Set.of(scifi));
-        movies.save(inception);
-
-        Movie interstellar = new Movie();
-        interstellar.setTitle("Interstellar");
-        interstellar.setYear(2014);
-        interstellar.setDurationMinutes(169);
-        interstellar.setDirector(nolan);
-        interstellar.setGenres(Set.of(scifi));
-        movies.save(interstellar);
-    }
-
     @Test
-    void search_byTitle_shouldReturnMatch() {
+    void search_byTitle_shouldFindInception() {
         Page<Movie> page = movies.search("inc", null, PageRequest.of(0, 10));
         assertThat(page.getTotalElements()).isEqualTo(1);
         assertThat(page.getContent().get(0).getTitle()).isEqualTo("Inception");
     }
 
     @Test
-    void search_byYear_shouldReturnMatch() {
+    void search_byYear_shouldFindInterstellar() {
         Page<Movie> page = movies.search(null, 2014, PageRequest.of(0, 10));
         assertThat(page.getTotalElements()).isEqualTo(1);
         assertThat(page.getContent().get(0).getTitle()).isEqualTo("Interstellar");
